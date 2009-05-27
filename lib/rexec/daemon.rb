@@ -1,4 +1,4 @@
-# Copyright (c) 2007 Samuel Williams. Released under the GNU GPLv3.
+# Copyright (c) 2007, 2009 Samuel Williams. Released under the GNU GPLv3.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,12 +13,5 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-module RExec
-  module VERSION #:nodoc:
-    MAJOR = 1
-    MINOR = 1
-    TINY  = 0
-
-    STRING = [MAJOR, MINOR, TINY].join('.')
-  end
-end
+require 'rexec/daemon/base'
+ 

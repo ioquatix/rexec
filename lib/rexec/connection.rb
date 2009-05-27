@@ -26,6 +26,8 @@ module RExec
   # Depending on how you set things up, this can connect to a local ruby process, or a remote ruby process
   # via SSH (for example).
   class Connection
+    public
+    
     # Create a new connection. You need to supply a pipe for reading input, a pipe for sending output,
     # and optionally a pipe for errors to be read from.
     def initialize(input, output, error = nil)
@@ -101,15 +103,11 @@ module RExec
       end
     end
     
-    # Receive an object from the connection. This function is thread-safe. This function may block. This
-    # function also calls dump_errors before receiving an object so that if there were any problems sending
-    # it, they will be (more) obvious.
+    # Receive an object from the connection. This function is thread-safe. This function may block.
     def receive
       object = nil
 
       @receive_mutex.synchronize do
-        dump_errors
-        
         begin
           object = Marshal.load(@input)
         rescue EOFError

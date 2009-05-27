@@ -36,7 +36,7 @@ class LocalTest < Test::Unit::TestCase
     connection_started = false
     object_received = false
 
-    RExec::start_server(code.read) do |conn, pid|
+    RExec::start_server(code.read, "ruby", :passthrough => []) do |conn, pid|
       connection_started = true
       conn.send([:bounce, sobj])
 
@@ -49,8 +49,9 @@ class LocalTest < Test::Unit::TestCase
         puts "Received object which should have been exception: #{obj.inspect}"
       end
 
+      conn.dump_errors
       conn.send([:stderr, stderr_text])
-      
+
       puts "Attemping to read from #{conn.error.to_i}..."
       assert_equal stderr_text, conn.error.readline.chomp
 

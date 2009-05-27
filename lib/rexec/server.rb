@@ -14,10 +14,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 require 'pathname'
-require 'rexec/to_cmd'
+require 'rexec/task'
 require 'rexec/connection'
 
 module RExec
+  
+  class InvalidConnectionError < Exception
+  end
   
   @@connection_code = (Pathname.new(__FILE__).dirname + "connection.rb").read
   @@client_code = (Pathname.new(__FILE__).dirname + "client.rb").read
@@ -31,9 +34,18 @@ module RExec
   #
   # From this point, you can send and receive objects, and interact with the code you provided within a
   # remote ruby instance.
-  def self.start_server(code, command = "ruby", &block)
+  def self.start_server(code, command, options = {}, &block)
+    options[:passthrough] = :err unless options[:passthrough]
+    
     # Child Input, Child Output, Child Error, Process ID
-    open_process(command) do |cin, cout, cerr, pid|
+    Task.open(command, options) do |process|
+      cin = process.input
+      cout = process.output
+      cerr = process.error
+      
+      # We require both cin and cout to be connected in order for connection to work
+      raise InvalidConnectionError.new("Input (#{cin}) or Output (#{cout}) is not connected!") unless cin and cout
+      
       cin.puts(@@connection_code)
       cin.puts(@@client_code)
       cin.puts(code)
@@ -42,11 +54,10 @@ module RExec
       conn = Connection.new(cout, cin, cerr)
       
       if block_given?
-        yield conn, pid
+        yield conn, process.pid
       else
-        return conn, pid
+        return conn, process.pid
       end
     end
   end
-  
 end

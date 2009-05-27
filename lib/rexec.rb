@@ -29,5 +29,4 @@
 
 require 'rexec/version'
 require 'rexec/connection'
-require 'rexec/to_cmd'
 require 'rexec/server'

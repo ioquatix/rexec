@@ -1,4 +1,6 @@
-# Copyright (c) 2007 Samuel Williams. Released under the GNU GPLv3.
+#!/usr/bin/env ruby
+
+# Copyright (c) 2007, 2009 Samuel Williams. Released under the GNU GPLv3.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,12 +15,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-module RExec
-  module VERSION #:nodoc:
-    MAJOR = 1
-    MINOR = 1
-    TINY  = 0
+require 'rubygems'
+require 'pathname'
+require 'xmlrpc/client'
+require 'test/unit'
 
-    STRING = [MAJOR, MINOR, TINY].join('.')
+class LocalTest < Test::Unit::TestCase
+  DAEMON = Pathname.new(__FILE__).dirname + "daemon.rb"
+  def setup
+    system(DAEMON, "start")
+    @rpc = XMLRPC::Client.new_from_uri("https://localhost:11235")
+  end
+
+  def teardown
+    system(DAEMON, "stop")
+  end
+
+  def test_connection
+    @rpc.call("add", 10)
+    total = @rpc.call("total")
+    
+    assert_equal total, 10
   end
 end

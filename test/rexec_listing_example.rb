@@ -1,4 +1,6 @@
-# Copyright (c) 2007 Samuel Williams. Released under the GNU GPLv3.
+#!/usr/bin/env ruby
+
+# Copyright (c) 2007, 2009 Samuel Williams. Released under the GNU GPLv3.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,12 +15,35 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-module RExec
-  module VERSION #:nodoc:
-    MAJOR = 1
-    MINOR = 1
-    TINY  = 0
+require 'rubygems'
+require 'rexec'
 
-    STRING = [MAJOR, MINOR, TINY].join('.')
+CLIENT = <<EOF
+
+$connection.run do |path|
+  listing = []
+
+  IO.popen("ls -la " + path.dump, "r+") do |ls|
+    listing = ls.readlines
+  end
+
+  $connection.send(listing)
+end
+
+EOF
+
+command = ARGV[0] || "ruby"
+
+puts "Starting server..."
+RExec::start_server(CLIENT, command) do |conn, pid|
+  puts "Sending path..."
+  conn.send("/")
+
+  puts "Waiting for response..."
+  listing = conn.receive
+
+  puts "Received listing:"
+  listing.each do |entry|
+    puts "\t#{entry}"
   end
 end
