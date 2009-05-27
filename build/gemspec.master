@@ -1,0 +1,18 @@
+
+Dir.chdir("../") do
+  require 'lib/rexec/version'
+
+  Gem::Specification.new do |s|
+    s.name = "rexec"
+    s.version = RExec::VERSION::STRING
+    s.author = "Samuel Williams"
+    s.email = "samuel.williams@oriontransfer.co.nz"
+    s.homepage = "http://wiki.oriontransfer.org/code:rexec.git"
+    s.platform = Gem::Platform::RUBY
+    s.summary = "RExec (Remote Execution) is a tool to facilitate communicating to another ruby process and executing code."
+    s.files = FileList["{bin,lib,test}/**/*"].to_a
+    s.test_files = FileList["test/*_test.rb"].to_a
+    s.require_path = "lib"
+    s.has_rdoc = true
+  end
+end
