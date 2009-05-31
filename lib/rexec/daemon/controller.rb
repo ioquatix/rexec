@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 require 'rexec/daemon/pidfile'
+require 'rexec/task'
 
 module RExec
   module Daemon
@@ -56,16 +57,6 @@ module RExec
         end
       end
 
-      # This function closes all IO other than $stdin, $stdout, $stderr
-      def self.close_io
-        # Make sure all file descriptors are closed
-        ObjectSpace.each_object(IO) do |io|
-          unless [$stdin, $stdout, $stderr].include?(io)
-            io.close rescue nil
-          end
-        end
-      end
-
       # This function starts the supplied daemon
       def self.start(daemon)
         case status(daemon)
@@ -93,8 +84,8 @@ module RExec
           $stderr.reopen daemon.err_fn, "a"
 
           # Close all IO other than the above std pipes
-          close_io
-          
+          RExec::close_io
+
           main = Thread.new do
             begin
               daemon.run

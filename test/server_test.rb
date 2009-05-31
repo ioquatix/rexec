@@ -30,7 +30,7 @@ class LocalTest < Test::Unit::TestCase
   end
 
   def test_local_execution
-    code = Pathname.new(__FILE__).dirname + "local_client.rb"
+    code = Pathname.new(__FILE__).dirname + "client.rb"
     sobj = [1, 2, "three", 4]
     stderr_text = "There was no error.. maybe?"
     connection_started = false

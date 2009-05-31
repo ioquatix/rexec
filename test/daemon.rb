@@ -28,7 +28,7 @@ require 'xmlrpc/server'
 
 # Very simple XMLRPC daemon
 class TestDaemon < RExec::Daemon::Base
-  @@var_directory = Pathname.new(__FILE__).dirname + "var"
+  @@var_directory = "/tmp/ruby-test/var"
   
   def self.run
     puts "Starting server..."
@@ -54,8 +54,6 @@ class TestDaemon < RExec::Daemon::Base
     @@rpc_server.mount("/RPC2", @@listener)
     
     @@rpc_server.start
-    
-    puts "Exiting server..."
   end
   
   def self.shutdown
