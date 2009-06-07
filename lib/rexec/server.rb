@@ -34,6 +34,9 @@ module RExec
   #
   # From this point, you can send and receive objects, and interact with the code you provided within a
   # remote ruby instance.
+  #
+  # If <tt>command</tt> is a shell such as "/bin/sh", and we need to start ruby separately, you can supply
+  # <tt>options[:ruby] = "/usr/bin/ruby"</tt> to explicitly start the ruby command.
   def self.start_server(code, command, options = {}, &block)
     options[:passthrough] = :err unless options[:passthrough]
     
@@ -46,13 +49,18 @@ module RExec
       # We require both cin and cout to be connected in order for connection to work
       raise InvalidConnectionError.new("Input (#{cin}) or Output (#{cout}) is not connected!") unless cin and cout
       
+      # Start the ruby interpreter if needed
+      if options[:ruby]
+        cin.puts(options[:ruby])
+      end
+      
       cin.puts(@@connection_code)
       cin.puts(@@client_code)
       cin.puts(code)
       cin.puts("\004")
 
       conn = Connection.new(cout, cin, cerr)
-      
+
       if block_given?
         yield conn, process.pid
       else
