@@ -78,4 +78,18 @@ class LocalTest < Test::Unit::TestCase
 
     assert(connection_started, "Connection started")
   end
+  
+  def test_shell_execution_non_block
+    connection_started = false
+    code = Pathname.new(__FILE__).dirname + "client.rb"
+
+    test_obj = [1, 2, 3, 4, "five"]
+
+    conn, pid = RExec::start_server(code.read, "/bin/sh", :passthrough => [], :ruby => "ruby")
+    conn.send([:bounce, test_obj])
+
+    assert_equal test_obj, conn.receive
+
+    conn.stop
+  end
 end

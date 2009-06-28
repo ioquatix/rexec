@@ -40,32 +40,23 @@ module RExec
   def self.start_server(code, command, options = {}, &block)
     options[:passthrough] = :err unless options[:passthrough]
     
-    # Child Input, Child Output, Child Error, Process ID
-    Task.open(command, options) do |process|
-      cin = process.input
-      cout = process.output
-      cerr = process.error
-      
-      # We require both cin and cout to be connected in order for connection to work
-      raise InvalidConnectionError.new("Input (#{cin}) or Output (#{cout}) is not connected!") unless cin and cout
-      
-      # Start the ruby interpreter if needed
-      if options[:ruby]
-        cin.puts(options[:ruby])
-      end
-      
+    send_code = Proc.new do |cin|
       cin.puts(@@connection_code)
       cin.puts(@@client_code)
       cin.puts(code)
-      cin.puts("\004")
-
-      conn = Connection.new(cout, cin, cerr)
-
-      if block_given?
+    end
+    
+    if block_given?
+      Task.open(command, options) do |process|
+        conn = Connection.build(process, options, &send_code)
+        
         yield conn, process.pid
-      else
-        return conn, process.pid
       end
+    else
+      process = Task.open(command, options)
+      conn = Connection.build(process, options, &send_code)
+      
+      return conn, process.pid
     end
   end
 end

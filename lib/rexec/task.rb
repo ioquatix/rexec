@@ -32,6 +32,13 @@ class Array
   end
 end
 
+class Pathname
+  # Helper for turning a pathname into a command line string
+  def to_cmd
+    to_s
+  end
+end
+
 module RExec
   RD = 0
   WR = 1
@@ -196,7 +203,7 @@ module RExec
     # If you need to supply a pipe manually, you can do that too:
     # <tt>:in => IO.pipe</tt>
     #
-    # Finally, you can specify <tt>:daemon => true</tt> to cause the child process to detatch. In this
+    # You can specify <tt>:daemon => true</tt> to cause the child process to detatch. In this
     # case you will generally want to specify files for <tt>:in, :out, :err</tt> e.g.
     # <tt>
     #   :in => File.open("/dev/null"),

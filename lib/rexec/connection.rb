@@ -28,6 +28,26 @@ module RExec
   class Connection
     public
     
+    def self.build(process, options, &block)
+      cin = process.input
+      cout = process.output
+      cerr = process.error
+      
+      # We require both cin and cout to be connected in order for connection to work
+      raise InvalidConnectionError.new("Input (#{cin}) or Output (#{cout}) is not connected!") unless cin and cout
+      
+      # Start the ruby interpreter if needed
+      if options[:ruby]
+        cin.puts(options[:ruby])
+      end
+      
+      yield cin
+      
+      cin.puts("\004")
+      
+      return self.new(cout, cin, cerr)
+    end
+    
     # Create a new connection. You need to supply a pipe for reading input, a pipe for sending output,
     # and optionally a pipe for errors to be read from.
     def initialize(input, output, error = nil)
