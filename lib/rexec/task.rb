@@ -62,19 +62,18 @@ module RExec
         passthrough = options[:passthrough]
         
         if passthrough == :all
-          passthrough = [:in, :out, :error]
+          passthrough = [:in, :out, :err]
         elsif passthrough.kind_of?(Symbol)
           passthrough = [passthrough]
         end
         
         passthrough.each do |name|
-          case(options[:passthrough])
-
-          when :stdin
+          case(name)
+          when :in
             options[:in] = $stdin
-          when :stdout
+          when :out
             options[:out] = $stdout
-          when :stderr
+          when :err
             options[:err] = $stderr
           end
         end
@@ -180,7 +179,7 @@ module RExec
       pid = fork do
         yield
 
-        exit(0)
+        exit!(0)
       end
 
       return pid
@@ -212,15 +211,16 @@ module RExec
     # </tt>
     def self.open(command, options = {}, &block)
       cin, cout, cerr = pipes_for_options(options)
+      stdpipes = [STDIN, STDOUT, STDERR]
 
       spawn = options[:daemonize] ? :spawn_daemon : :spawn_child
 
       cid = self.send(spawn) do
         [cin[WR], cout[RD], cerr[RD]].compact.each { |pipe| pipe.close }
-
-        STDIN.reopen(cin[RD]) if cin[RD]
-        STDOUT.reopen(cout[WR]) if cout[WR]
-        STDERR.reopen(cerr[WR]) if cerr[WR]
+        
+        STDIN.reopen(cin[RD]) if cin[RD] and !stdpipes.include?(cin[RD])
+        STDOUT.reopen(cout[WR]) if cout[WR] and !stdpipes.include?(cout[WR])
+        STDERR.reopen(cerr[WR]) if cerr[WR] and !stdpipes.include?(cerr[WR])
         
         if command.respond_to? :call
           command.call
@@ -233,7 +233,8 @@ module RExec
         end
       end
       
-      [cin[RD], cout[WR], cerr[WR]].compact.each { |pipe| pipe.close }
+      # Don't close stdin, stdout, stderr.
+      [cin[RD], cout[WR], cerr[WR]].compact.each { |pipe| pipe.close unless stdpipes.include?(pipe) }
 
       task = Task.new(cin[WR], cout[RD], cerr[RD], cid)
 
