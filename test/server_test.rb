@@ -30,7 +30,7 @@ class LocalTest < Test::Unit::TestCase
   end
 
   def test_local_execution
-    code = Pathname.new(__FILE__).dirname + "client.rb"
+    code = Pathname.new(__FILE__).dirname + "./client.rb"
     sobj = [1, 2, "three", 4]
     stderr_text = "There was no error.. maybe?"
     connection_started = false
@@ -38,19 +38,19 @@ class LocalTest < Test::Unit::TestCase
 
     RExec::start_server(code.read, "ruby", :passthrough => []) do |conn, pid|
       connection_started = true
-      conn.send([:bounce, sobj])
+      conn.send_object([:bounce, sobj])
 
-      assert_equal sobj, conn.receive
+      assert_equal sobj, conn.receive_object
 
       assert_raises(Exception) do
-        conn.send([:exception])
-        obj = conn.receive
+        conn.send_object([:exception])
+        obj = conn.receive_object
         
         puts "Received object which should have been exception: #{obj.inspect}"
       end
 
       conn.dump_errors
-      conn.send([:stderr, stderr_text])
+      conn.send_object([:stderr, stderr_text])
 
       puts "Attemping to read from #{conn.error.to_i}..."
       assert_equal stderr_text, conn.error.readline.chomp
@@ -69,9 +69,9 @@ class LocalTest < Test::Unit::TestCase
 
     RExec::start_server(code.read, "/bin/sh", :passthrough => [], :ruby => "ruby") do |conn, pid|
       connection_started = true
-      conn.send([:bounce, test_obj])
+      conn.send_object([:bounce, test_obj])
 
-      assert_equal test_obj, conn.receive
+      assert_equal test_obj, conn.receive_object
 
       conn.stop
     end
@@ -86,9 +86,9 @@ class LocalTest < Test::Unit::TestCase
     test_obj = [1, 2, 3, 4, "five"]
 
     conn, pid = RExec::start_server(code.read, "/bin/sh", :passthrough => [], :ruby => "ruby")
-    conn.send([:bounce, test_obj])
+    conn.send_object([:bounce, test_obj])
 
-    assert_equal test_obj, conn.receive
+    assert_equal test_obj, conn.receive_object
 
     conn.stop
   end

@@ -225,6 +225,12 @@ module RExec
         if command.respond_to? :call
           command.call
         else
+          # If command is a Pathname, we need to convert it to an absolute path if possible,
+          # otherwise if it is relative it might cause problems.
+          if command.respond_to? :realpath
+            command = command.realpath
+          end
+          
           if command.respond_to? :to_cmd
             exec(command.to_cmd)
           else

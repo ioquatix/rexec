@@ -27,7 +27,7 @@ module RExec
   # via SSH (for example).
   class Connection
     public
-    
+
     def self.build(process, options, &block)
       cin = process.input
       cout = process.output
@@ -36,18 +36,13 @@ module RExec
       # We require both cin and cout to be connected in order for connection to work
       raise InvalidConnectionError.new("Input (#{cin}) or Output (#{cout}) is not connected!") unless cin and cout
       
-      # Start the ruby interpreter if needed
-      if options[:ruby]
-        cin.puts(options[:ruby])
-      end
-      
       yield cin
       
       cin.puts("\004")
       
       return self.new(cout, cin, cerr)
     end
-    
+
     # Create a new connection. You need to supply a pipe for reading input, a pipe for sending output,
     # and optionally a pipe for errors to be read from.
     def initialize(input, output, error = nil)
@@ -94,7 +89,7 @@ module RExec
         pipes = IO.select([@input])
 
         if pipes[0].size > 0
-          object = receive
+          object = receive_object
           
           if object == nil
             @running = false
@@ -104,7 +99,7 @@ module RExec
           begin
             yield object
           rescue Exception => ex
-            send(ex)
+            send_object(ex)
           end
         end
       end
@@ -112,7 +107,7 @@ module RExec
 
     # Dump any text which has been written to $stderr in the child process.
     def dump_errors(to = $stderr)
-      if @error
+      if @error and !@error.closed?
         while true
           result = IO.select([@error], [], [], 0)
 
@@ -124,7 +119,7 @@ module RExec
     end
     
     # Receive an object from the connection. This function is thread-safe. This function may block.
-    def receive
+    def receive_object
       object = nil
 
       @receive_mutex.synchronize do
@@ -144,7 +139,7 @@ module RExec
     end
 
     # Send object(s). This function is thread-safe.
-    def send(*objects)
+    def send_object(*objects)
       @send_mutex.synchronize do
         objects.each do |o|
           data = Marshal.dump(o)

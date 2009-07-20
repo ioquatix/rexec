@@ -27,7 +27,7 @@ $connection.run do |path|
     listing = ls.readlines
   end
 
-  $connection.send(listing)
+  $connection.send_object(listing)
 end
 
 EOF
@@ -37,10 +37,10 @@ command = ARGV[0] || "ruby"
 puts "Starting server..."
 RExec::start_server(CLIENT, command) do |conn, pid|
   puts "Sending path..."
-  conn.send("/")
+  conn.send_object("/")
 
   puts "Waiting for response..."
-  listing = conn.receive
+  listing = conn.receive_object
 
   puts "Received listing:"
   listing.each do |entry|

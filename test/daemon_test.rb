@@ -21,7 +21,7 @@ require 'xmlrpc/client'
 require 'test/unit'
 
 class LocalTest < Test::Unit::TestCase
-  DAEMON = Pathname.new(__FILE__).dirname + "daemon.rb"
+  DAEMON = Pathname.new(__FILE__).dirname + "./daemon.rb"
   def setup
     system(DAEMON, "start")
     @rpc = XMLRPC::Client.new_from_uri("https://localhost:11235")

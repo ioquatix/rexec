@@ -25,7 +25,7 @@ require 'rexec'
 require 'timeout'
 
 class LocalTest < Test::Unit::TestCase
-  TASK_PATH = Pathname.new(__FILE__).dirname + "task.rb"
+  TASK_PATH = Pathname.new(__FILE__).dirname + "./task.rb"
   TEXT = "The quick brown fox jumped over the lazy dog."
   STDOUT_TEXT = "STDOUT: " + TEXT
   STDERR_TEXT = "STDERR: " + TEXT
@@ -152,7 +152,7 @@ class LocalTest < Test::Unit::TestCase
   end
   
   def test_task_passthrough
-    RExec::Task.open("echo " + "Hello World!".dump + " | #{TASK_PATH.to_s.dump}", :passthrough => :all) do
+    RExec::Task.open("echo " + "Hello World!".dump + " | #{TASK_PATH.realpath.to_s.dump}", :passthrough => :all) do
       
     end
 
