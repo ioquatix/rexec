@@ -22,13 +22,7 @@ require 'fileutils'
 require 'pathname'
 require 'rexec'
 
-class LocalTest < Test::Unit::TestCase
-  def setup
-  end
-
-  def teardown
-  end
-
+class ServerTest < Test::Unit::TestCase
   def test_local_execution
     code = Pathname.new(__FILE__).dirname + "./client.rb"
     sobj = [1, 2, "three", 4]
@@ -67,7 +61,7 @@ class LocalTest < Test::Unit::TestCase
 
     test_obj = [1, 2, 3, 4, "five"]
 
-    RExec::start_server(code.read, "/bin/sh", :passthrough => [], :ruby => "ruby") do |conn, pid|
+    RExec::start_server(code.read, "/bin/sh -c ruby", :passthrough => []) do |conn, pid|
       connection_started = true
       conn.send_object([:bounce, test_obj])
 
@@ -85,7 +79,7 @@ class LocalTest < Test::Unit::TestCase
 
     test_obj = [1, 2, 3, 4, "five"]
 
-    conn, pid = RExec::start_server(code.read, "/bin/sh", :passthrough => [], :ruby => "ruby")
+    conn, pid = RExec::start_server(code.read, "/bin/sh -c ruby", :passthrough => [])
     conn.send_object([:bounce, test_obj])
 
     assert_equal test_obj, conn.receive_object

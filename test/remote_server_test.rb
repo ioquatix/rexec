@@ -25,7 +25,12 @@ require 'fileutils'
 require 'pathname'
 require 'rexec'
 
-COMMAND = ARGV[1] || "ruby"
+if $0.match("remote_server_test.rb") and ARGV.size > 0
+	COMMAND = ARGV.join(" ")
+else
+	COMMAND = "ruby"
+end
+
 BOUNCE = "Apples and Oranges"
 
 class RemoteServerTest < Test::Unit::TestCase

@@ -20,21 +20,25 @@ require 'pathname'
 require 'xmlrpc/client'
 require 'test/unit'
 
-class LocalTest < Test::Unit::TestCase
-  DAEMON = Pathname.new(__FILE__).dirname + "./daemon.rb"
+class DaemonTest < Test::Unit::TestCase
+  DAEMON = (Pathname.new(__FILE__).dirname + "./daemon.rb").realpath
   def setup
     system(DAEMON, "start")
-    @rpc = XMLRPC::Client.new_from_uri("https://localhost:11235")
+    
+    # Daemon takes a moment to become fully operational
+    sleep(5)
   end
-
+  
   def teardown
     system(DAEMON, "stop")
   end
 
   def test_connection
-    @rpc.call("add", 10)
-    total = @rpc.call("total")
+    rpc = XMLRPC::Client.new_from_uri("https://localhost:11235")
+    rpc.call("add", 10)
     
-    assert_equal total, 10
+    total = rpc.call("total")
+    
+    assert_equal 10, total
   end
 end

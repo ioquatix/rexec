@@ -53,6 +53,9 @@ class TestDaemon < RExec::Daemon::Base
     
     @@rpc_server.mount("/RPC2", @@listener)
     
+    $stdout.flush
+    $stderr.flush
+    
     @@rpc_server.start
   end
   
