@@ -83,9 +83,6 @@ module RExec
           $stdout.reopen daemon.log_fn, "a"
           $stderr.reopen daemon.err_fn, "a"
 
-          # Close all IO other than the above std pipes
-          RExec::close_io
-
           main = Thread.new do
             begin
               daemon.run
