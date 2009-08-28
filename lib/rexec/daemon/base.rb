@@ -15,6 +15,7 @@
 
 require 'fileutils'
 require 'rexec/daemon/controller'
+require 'rexec/reverse_io'
 
 module RExec
   module Daemon
@@ -64,11 +65,48 @@ module RExec
         File.join(pid_directory, "#{daemon_name}.pid")
       end
 
-      # Returns some information relating to daemon startup problems
-      def self.tail_err_log
-        IO.popen("tail #{err_fn.dump}") do |io|
-          return io.read
+      # Mark the error log
+      def self.mark_err_log
+        fp = File.open(err_fn, "a")
+        fp.puts "=== Error Log Opened @ #{Time.now.to_s} ==="
+        fp.close
+      end
+
+      # Prints some information relating to daemon startup problems
+      def self.tail_err_log(outp)
+        lines = []
+        
+        File.open(err_fn, "r") do |fp|
+          fp.seek_end
+
+          fp.reverse_each_line do |line|
+            lines << line
+            break if line.match("=== Error Log") || line.match("=== Daemon Exception Backtrace")
+          end
         end
+        
+        lines.reverse_each do |line|
+          outp.puts line
+        end
+      end
+
+      # Check the last few lines of the log file to find out if
+      # the daemon crashed.
+      def self.crashed?
+        File.open(err_fn, "r") do |fp|
+          fp.seek_end
+          
+          count = 2
+          fp.reverse_each_line do |line|
+            return true if line.match("=== Daemon Crashed")
+            
+            count -= 1
+            
+            break if count == 0
+          end
+        end
+        
+        return false
       end
 
       # Corresponds to controller method of the same name

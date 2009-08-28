@@ -1,0 +1,14 @@
+= RExec
+
+Author::    Samuel Williams (http://www.oriontransfer.co.nz/)
+Copyright:: Copyright (C) 2009 Samuel Williams
+License::   GPLv3
+Git::       http://git.oriontransfer.org
+
+RExec stands for Ruby Execute or Remote Execute (depending on how you use it). It provides a number of different things to assist with running Ruby code:
+
+* A framework to send Ruby code to a remote server for execution
+* A framework for writing command line daemons (i.e. <tt>start</tt>, <tt>restart</tt>, <tt>stop</tt>, <tt>status</tt>)
+* A comprehensive <tt>Task</tt> class for launching tasks, managing input and output, exit status, etc
+* Basic privilege management code for changing the processes owner
+* A bunch of helpers for various different things (such as reading a file backwards)

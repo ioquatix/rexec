@@ -29,7 +29,9 @@ module RExec
 
       # Removes the pid saved for a particular daemon
       def self.clear(daemon)
-        FileUtils.rm(daemon.pid_fn)
+        if File.exist? daemon.pid_fn
+          FileUtils.rm(daemon.pid_fn)
+        end
       end
 
       # Checks whether the daemon is running by checking the saved pid and checking the corresponding process
@@ -46,6 +48,16 @@ module RExec
       # Remove the pid file if the daemon is not running
       def self.cleanup(daemon)
         clear(daemon) unless running(daemon)
+      end
+      
+      # This function returns the status of the daemon. This can be one of <tt>:running</tt>, <tt>:unknown</tt> (pid file exists but no 
+      # corresponding process can be found) or <tt>:stopped</tt>.
+      def self.status(daemon)
+        if File.exist? daemon.pid_fn
+          return PidFile.running(daemon) ? :running : :unknown
+        else
+          return :stopped
+        end
       end
     end
   end

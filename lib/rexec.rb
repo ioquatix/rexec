@@ -30,3 +30,4 @@
 require 'rexec/version'
 require 'rexec/connection'
 require 'rexec/server'
+require 'rexec/priviledges'
