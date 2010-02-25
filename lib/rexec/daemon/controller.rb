@@ -93,9 +93,13 @@ module RExec
             end
           end
 
+					trap("INT") do
+						daemon.shutdown
+						main.exit
+					end
+
           trap("TERM") do
-            daemon.shutdown
-            main.exit
+            exit!
           end
 
           main.join
@@ -158,7 +162,7 @@ module RExec
         end
 
         pid = PidFile.recall(daemon)
-        Process.kill("KILL", pid)
+        Process.kill("INT", pid)
         sleep 0.1
         
         # Kill/Term loop - if the daemon didn't die easily, shoot
