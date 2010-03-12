@@ -60,6 +60,7 @@ class TestDaemon < RExec::Daemon::Base
   end
   
   def self.shutdown
+		puts "Shutting down server..."
     @@rpc_server.shutdown
   end
 end

@@ -1,0 +1,116 @@
+#!/usr/bin/env ruby
+
+# Copyright (c) 2010 Samuel Williams. Released under the GNU GPLv3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+require 'rubygems'
+
+require 'rexec'
+require 'optparse'
+
+OPTIONS = {
+	:out => "/tmp/daemon-exec.log",
+	:err => "/tmp/daemon-exec-error.log",
+	:in => "/dev/null",
+	:print_pid => false,
+	:root => "/",
+	:verbose => false,
+	:relocate => true,
+	:read_stdin => false,
+}
+
+ARGV.options do |o|
+	script_name = File.basename($0)
+
+	o.set_summary_indent("\t")
+	o.banner = "Usage: #{script_name} [-I stdin] [-O stdout] [-E stderr] [script/stdin]"
+	o.define_head "Copyright (c) 2010 Samuel Williams <http://www.oriontransfer.co.nz/>."
+
+	o.on("-d [dir]", String, "Daemons working path, default /") do |dir|
+		OPTIONS[:root] = dir
+	end
+	
+	o.on("-s", "Don't attempt to relocate arguments to absolute paths") do
+		OPTIONS[:relocate] = false
+	end
+
+	o.define "File / Pipe Options:"
+
+	o.on("-I [path]", String, "File for STDIN, defaults to #{OPTIONS[:in]}; Note: Use -I - to send data from current STDIN") do |path|
+		OPTIONS[:in] = path
+	end
+	
+	o.on("-O [path]", String, "File for STDOUT, defaults to #{OPTIONS[:out]}") do |path|
+		OPTIONS[:in] = path
+	end
+	
+	o.on("-E [path]", String, "File for STDERR, defaults to #{OPTIONS[:err]}") do |path|
+		OPTIONS[:err] = path
+	end
+	
+	o.define "Misc Options:"
+	
+	o.on("-p", "Print out the PID of the forked process") do
+		OPTIONS[:print_pid] = true
+	end
+	
+	o.on("-V", "Print verbose information about what is going on") do
+		OPTIONS[:verbose] = true
+	end
+	
+	o.on("-h", "Show this help/version information and exit") do
+		puts o
+		exit 0
+	end
+end.parse!
+
+if OPTIONS[:relocate]
+	ARGV.collect! do |value|
+		if File.exist?(value)
+			File.expand_path(value)
+		else
+			value
+		end
+	end
+
+	[:in, :out, :err].each do |path|
+		OPTIONS[path] = File.expand_path(OPTIONS[path]) unless OPTIONS[path] == "-"
+	end
+end
+
+if OPTIONS[:verbose]
+	puts "Running #{ARGV.inspect}"
+end
+
+task_options = {
+	:daemonize => true,
+	:out => File.open(OPTIONS[:in], "a"),
+	:err => File.open(OPTIONS[:err], "a")
+}
+
+if OPTIONS[:in] == '-'
+	task_options[:passthrough] = [:in]
+end
+
+daemon = lambda do
+	Dir.chdir(OPTIONS[:root])
+	system("env", *ARGV)
+end
+
+task = RExec::Task.open(daemon, task_options)
+
+if OPTIONS[:print_pid]
+	puts task.pid
+end

@@ -7,11 +7,13 @@ Dir.chdir("../") do
     s.version = RExec::VERSION::STRING
     s.author = "Samuel Williams"
     s.email = "samuel.williams@oriontransfer.co.nz"
-    s.homepage = "http://wiki.oriontransfer.org/code:rexec.git"
+    s.homepage = "http://www.oriontransfer.co.nz/software/rexec"
     s.platform = Gem::Platform::RUBY
     s.summary = "RExec (Remote Execution) is a tool to facilitate communicating to another ruby process and executing code."
     s.files = FileList["{bin,lib,test}/**/*"] + ["README.rdoc"]
-    
+
+    s.executables << 'daemon-exec'
+
     s.has_rdoc = true
     s.extra_rdoc_files = ["README.rdoc"]
     s.rdoc_options << '--main' << 'README.rdoc'
