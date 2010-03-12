@@ -96,7 +96,7 @@ end
 
 task_options = {
 	:daemonize => true,
-	:out => File.open(OPTIONS[:in], "a"),
+	:out => File.open(OPTIONS[:out], "a"),
 	:err => File.open(OPTIONS[:err], "a")
 }
 
