@@ -48,12 +48,16 @@ ARGV.options do |o|
 
 	o.define "File / Pipe Options:"
 
-	o.on("-I [path]", String, "File for STDIN, defaults to #{OPTIONS[:in]}; Note: Use -I - to send data from current STDIN") do |path|
+	o.on("-I [path]", String, "File for STDIN, defaults to #{OPTIONS[:in]}") do |path|
 		OPTIONS[:in] = path
 	end
 	
+	o.on("--stdin", "Read from current STDIN to daemon process.") do
+		OPTIONS[:in] = "-"
+	end
+	
 	o.on("-O [path]", String, "File for STDOUT, defaults to #{OPTIONS[:out]}") do |path|
-		OPTIONS[:in] = path
+		OPTIONS[:out] = path
 	end
 	
 	o.on("-E [path]", String, "File for STDERR, defaults to #{OPTIONS[:err]}") do |path|
@@ -86,7 +90,7 @@ if OPTIONS[:relocate]
 	end
 
 	[:in, :out, :err].each do |path|
-		OPTIONS[path] = File.expand_path(OPTIONS[path]) unless OPTIONS[path] == "-"
+		OPTIONS[path] = File.expand_path(OPTIONS[path]) if File.exist?(OPTIONS[path])
 	end
 end
 
@@ -114,3 +118,4 @@ task = RExec::Task.open(daemon, task_options)
 if OPTIONS[:print_pid]
 	puts task.pid
 end
+
