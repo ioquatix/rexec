@@ -1,33 +1,29 @@
-# Copyright (c) 2007 Samuel Williams. Released under the GNU GPLv3.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# Copyright (c) 2007, 2009, 2011 Samuel G. D. Williams. <http://www.oriontransfer.co.nz>
 # 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 # 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-# = Summary =
-# This gem provides a very simple connection based API for communicating 
-# with remote instances of ruby. These can either be local, or remote, such
-# as over SSH.
-#
-# The API is very simple and deals with sending and receiving objects using 
-# Marshal. One of the primary goals was to impose as little structure as
-# possible on the end user of this library, while still maintaining a level
-# of convenience.
-#
-# Author::    Samuel Williams (samuel AT oriontransfer DOT org)
-# Copyright:: Copyright (c) 2009 Samuel Williams.
-# License::   Released under the GNU GPLv3.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
 
 require 'rexec/version'
 require 'rexec/connection'
 require 'rexec/server'
 require 'rexec/priviledges'
+
+## RExec is a tool to assist with the execution of other processes.
+module RExec
+	
+end

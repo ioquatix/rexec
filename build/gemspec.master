@@ -14,9 +14,9 @@ Dir.chdir("../") do
 
     s.executables << 'daemon-exec'
 
-    s.has_rdoc = true
+    s.has_rdoc = "yard"
     s.extra_rdoc_files = ["README.rdoc"]
-    s.rdoc_options << '--main' << 'README.rdoc'
+    s.rdoc_options << '--main' << 'README.rdoc' << "--no-private"
     
     s.test_files = FileList["test/*_test.rb"]
   end
