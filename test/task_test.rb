@@ -133,7 +133,7 @@ class TaskTest < Test::Unit::TestCase
     
     assert rd.closed?
     
-    assert_raises(Errno::EPIPE) do
+    assert_raises(Errno::EINVAL) do
       wr.puts "The pipe is closed on the other side.."
     end
     

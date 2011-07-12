@@ -22,176 +22,193 @@ require 'rexec/daemon/pidfile'
 require 'rexec/task'
 
 module RExec
-  module Daemon
-    # Daemon startup timeout
-    TIMEOUT = 5
-    
-    # This module contains functionality related to starting and stopping the daemon, and code for processing command line input.
-    module Controller
-      # This function is called from the daemon executable. It processes ARGV and checks whether the user is asking for
-      # <tt>start</tt>, <tt>stop</tt>, <tt>restart</tt> or <tt>status</tt>.
-      def self.daemonize(daemon)
-        #puts "Running in #{WorkingDirectory}, logs in #{LogDirectory}"
-        case !ARGV.empty? && ARGV[0]
-        when 'start'
-          start(daemon)
-          status(daemon)
-        when 'stop'
-          stop(daemon)
-          status(daemon)
-          PidFile.cleanup(daemon)
-        when 'restart'
-          stop(daemon)
-          PidFile.cleanup(daemon)
-          start(daemon)
-          status(daemon)
-        when 'status'
-          status(daemon)
-        else
-          puts "Invalid command. Please specify start, restart, stop or status."
-          exit
-        end
-      end
+	module Daemon
+		# Daemon startup timeout
+		TIMEOUT = 5
 
-      # This function starts the supplied daemon
-      def self.start(daemon)
-        puts "Starting daemon..."
-        
-        case PidFile.status(daemon)
-        when :running
-          $stderr.puts "Daemon already running!"
-          return
-        when :stopped
-          # We are good to go...
-        else
-          $stderr.puts "Daemon in unknown state! Will clear previous state and continue."
-          status(daemon)
-          PidFile.clear(daemon)
-        end
+		# This module contains functionality related to starting and stopping the daemon, and code for processing command line input.
+		module Controller
+			# This function is called from the daemon executable. It processes ARGV and checks whether the user is asking for
+			# +start+, +stop+, +restart+ or +status+.
+			def self.daemonize(daemon)
+				#puts "Running in #{WorkingDirectory}, logs in #{LogDirectory}"
+				case !ARGV.empty? && ARGV[0]
+				when 'start'
+					start(daemon)
+					status(daemon)
+				when 'stop'
+					stop(daemon)
+					status(daemon)
+					PidFile.cleanup(daemon)
+				when 'restart'
+					stop(daemon)
+					PidFile.cleanup(daemon)
+					start(daemon)
+					status(daemon)
+				when 'status'
+					status(daemon)
+				else
+					puts "Invalid command. Please specify start, restart, stop or status."
+					exit
+				end
+			end
 
-        daemon.prefork
-        daemon.mark_err_log
+			# This function starts the supplied daemon
+			def self.start(daemon)
+				puts "Starting daemon..."
 
-        fork do
-          Process.setsid
-          exit if fork
+				case PidFile.status(daemon)
+				when :running
+					$stderr.puts "Daemon already running!"
+					return
+				when :stopped
+					# We are good to go...
+				else
+					$stderr.puts "Daemon in unknown state! Will clear previous state and continue."
+					status(daemon)
+					PidFile.clear(daemon)
+				end
 
-          PidFile.store(daemon, Process.pid)
+				daemon.prefork
+				daemon.mark_err_log
 
-          File.umask 0000
-          Dir.chdir daemon.working_directory
+				fork do
+					Process.setsid
+					exit if fork
 
-          $stdin.reopen "/dev/null"
-          $stdout.reopen daemon.log_fn, "a"
-          $stderr.reopen daemon.err_fn, "a"
+					PidFile.store(daemon, Process.pid)
 
-          main = Thread.new do
-            begin
-              daemon.run
-            rescue
-              $stderr.puts "=== Daemon Exception Backtrace @ #{Time.now.to_s} ==="
-              $stderr.puts "#{$!.class}: #{$!.message}"
-              $!.backtrace.each { |at| $stderr.puts at }
-              $stderr.puts "=== Daemon Crashed ==="
-              
-              $stderr.flush
-            end
-          end
+					File.umask 0000
+					Dir.chdir daemon.working_directory
 
-					trap("INT") do
-						daemon.shutdown
-						main.exit
+					$stdin.reopen "/dev/null"
+					$stdout.reopen daemon.log_fn, "a"
+					$stdout.sync = true
+					
+					$stderr.reopen daemon.err_fn, "a"
+					$stderr.sync = true
+
+					begin
+						error = nil
+						
+						main = Thread.new do
+							begin
+								daemon.run
+							rescue
+								error = $!
+							end
+						end
+
+						trap("INT") do
+							begin
+								daemon.shutdown
+								main.exit
+							rescue
+								error = $!
+							end
+						end
+
+						trap("TERM") do
+							exit!
+						end
+
+						main.join
+
+						raise error if error
+					rescue
+						$stderr.puts "=== Daemon Exception Backtrace @ #{Time.now.to_s} ==="
+						$stderr.puts "#{$!.class}: #{$!.message}"
+						$!.backtrace.each { |at| $stderr.puts at }
+						$stderr.puts "=== Daemon Crashed ==="
+						$stderr.flush
+					ensure
+						$stderr.puts "=== Daemon Stopping @ #{Time.now.to_s} ==="
+						$stderr.flush
 					end
+				end
 
-          trap("TERM") do
-            exit!
-          end
+				puts "Waiting for daemon to start..."
+				sleep 0.1
+				timer = TIMEOUT
+				pid = PidFile.recall(daemon)
 
-          main.join
-        end
+				while pid == nil and timer > 0
+					# Wait a moment for the forking to finish...
+					puts "Waiting for daemon to start (#{timer}/#{TIMEOUT})"
+					sleep 1
 
-        puts "Waiting for daemon to start..."
-        sleep 0.1
-        timer = TIMEOUT
-        pid = PidFile.recall(daemon)
-        
-        while pid == nil and timer > 0
-          # Wait a moment for the forking to finish...
-          puts "Waiting for daemon to start (#{timer}/#{TIMEOUT})"
-          sleep 1
-          
-          # If the daemon has crashed, it is never going to start...
-          break if daemon.crashed?
-          
-          pid = PidFile.recall(daemon)
-          
-          timer -= 1
-        end
-      end
+					# If the daemon has crashed, it is never going to start...
+					break if daemon.crashed?
 
-      # Prints out the status of the daemon
-      def self.status(daemon)
-        case PidFile.status(daemon)
-        when :running
-          puts "Daemon status: running pid=#{PidFile.recall(daemon)}"
-        when :unknown
-          if daemon.crashed?
-            puts "Daemon status: crashed"
-            
-            $stdout.flush
-            daemon.tail_err_log($stderr)
-          else
-            puts "Daemon status: unknown"
-          end
-        when :stopped
-          puts "Daemon status: stopped"
-        end
-      end
+					pid = PidFile.recall(daemon)
 
-      # Stops the daemon process.
-      def self.stop(daemon)
-        puts "Stopping daemon..."
-        
-        # Check if the pid file exists...
-        if !File.file?(daemon.pid_fn)
-          puts "Pid file not found. Is the daemon running?"
-          return
-        end
+					timer -= 1
+				end
+			end
 
-        pid = PidFile.recall(daemon)
+			# Prints out the status of the daemon
+			def self.status(daemon)
+				case PidFile.status(daemon)
+				when :running
+					puts "Daemon status: running pid=#{PidFile.recall(daemon)}"
+				when :unknown
+					if daemon.crashed?
+						puts "Daemon status: crashed"
 
-        # Check if the daemon is already stopped...
-        unless PidFile.running(daemon)
-          puts "Pid #{pid} is not running. Has daemon crashed?"
-          return
-        end
+						$stdout.flush
+						daemon.tail_err_log($stderr)
+					else
+						puts "Daemon status: unknown"
+					end
+				when :stopped
+					puts "Daemon status: stopped"
+				end
+			end
 
-        pid = PidFile.recall(daemon)
-        Process.kill("INT", pid)
-        sleep 0.1
-        
-        # Kill/Term loop - if the daemon didn't die easily, shoot
-        # it a few more times.
-        attempts = 5
-        while PidFile.running(daemon) and attempts > 0
-          sig = (attempts < 2) ? "KILL" : "TERM"
-          
-          puts "Sending #{sig} to pid #{pid}..."
-          Process.kill(sig, pid)
-          
-          sleep 1 unless first
-          attempts -= 1
-        end
-        
-        # If after doing our best the daemon is still running (pretty odd)...
-        if PidFile.running(daemon)
-          puts "Daemon appears to be still running!"
-          return
-        end
-        
-        # Otherwise the daemon has been stopped.
-        PidFile.clear(daemon)
-      end
-    end
-  end
+			# Stops the daemon process.
+			def self.stop(daemon)
+				puts "Stopping daemon..."
+
+				# Check if the pid file exists...
+				if !File.file?(daemon.pid_fn)
+					puts "Pid file not found. Is the daemon running?"
+					return
+				end
+
+				pid = PidFile.recall(daemon)
+
+				# Check if the daemon is already stopped...
+				unless PidFile.running(daemon)
+					puts "Pid #{pid} is not running. Has daemon crashed?"
+					return
+				end
+
+				pid = PidFile.recall(daemon)
+				Process.kill("INT", pid)
+				sleep 0.1
+
+				# Kill/Term loop - if the daemon didn't die easily, shoot
+				# it a few more times.
+				attempts = 5
+				while PidFile.running(daemon) and attempts > 0
+					sig = (attempts < 2) ? "KILL" : "TERM"
+
+					puts "Sending #{sig} to pid #{pid}..."
+					Process.kill(sig, pid)
+
+					sleep 1
+					attempts -= 1
+				end
+
+				# If after doing our best the daemon is still running (pretty odd)...
+				if PidFile.running(daemon)
+					puts "Daemon appears to be still running!"
+					return
+				end
+
+				# Otherwise the daemon has been stopped.
+				PidFile.clear(daemon)
+			end
+		end
+	end
 end

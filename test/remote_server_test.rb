@@ -42,7 +42,7 @@ class RemoteServerTest < Test::Unit::TestCase
   def test_block_execution
     code = Pathname.new(__FILE__).dirname + "./client.rb"
     
-    RExec::start_server(code.read, COMMAND, :passthrough => []) do |conn, pid|
+    RExec::start_server(code.read, COMMAND) do |conn, pid|
       conn.send_object([:bounce, BOUNCE])
 
       assert_equal BOUNCE, conn.receive_object
