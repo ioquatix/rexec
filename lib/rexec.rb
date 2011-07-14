@@ -22,8 +22,9 @@ require 'rexec/version'
 require 'rexec/connection'
 require 'rexec/server'
 require 'rexec/priviledges'
+require 'rexec/to_cmd'
 
-## RExec is a tool to assist with the execution of other processes.
+# RExec is a tool to assist with the execution of other processes.
 module RExec
 	
 end
