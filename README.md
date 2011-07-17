@@ -1,46 +1,55 @@
-= RExec
+RExec
+=====
 
-Author::    Samuel G. D. Williams (http://www.oriontransfer.co.nz)
-Copyright:: Copyright (C) 2007, 2009, 2011 Samuel G. D. Williams
-License::   MIT
+* Author: Samuel G. D. Williams (<http://www.oriontransfer.co.nz>)
+* Copyright (C) 2007, 2009, 2011 Samuel G. D. Williams.
+* Released under the MIT license.
 
 RExec stands for Remote Execute and provides support for executing processes 
 both locally and remotely. It provides a number of different tools to assist
 with running Ruby code:
 
 * A framework to send Ruby code to a remote server for execution.
-* A framework for writing command line daemons (i.e. +start+, +restart+, +stop+, +status+).
-* A comprehensive +Task+ class for launching tasks, managing input and output, exit status, etc.
+* A framework for writing command line daemons (i.e. `start`, `restart`, `stop`, `status`).
+* A comprehensive `Task` class for launching tasks, managing input and output, exit status, etc.
 * Basic privilege management code for changing the processes owner.
 * A bunch of helpers for various different things (such as reading a file backwards).
-* +daemon-exec+ executable for running regular shell tasks in the background.
+* `daemon-exec` executable for running regular shell tasks in the background.
 
-== Comprehensive process management
+For more information please see the [project page][1].
 
-+RExec::Task+ provides a comprehensive wrapper for low level process execution
+[1]: http://www.oriontransfer.co.nz/gems/rexec
+
+Comprehensive process management
+--------------------------------
+
+`RExec::Task` provides a comprehensive wrapper for low level process execution
 and life-cycle management. You can easy spawn new child processes, background
 processes and execute Ruby code in a child instance.
 
-== Light weight bi-directional communication
+Light weight bi-directional communication
+-----------------------------------------
 
-The +RExec::Connection+ provides a simple process based API for communicating 
+The `RExec::Connection` provides a simple process based API for communicating 
 with distant instances of Ruby. These can either be local or remote, such
 as over SSH.
 
-== Simple daemonization
+Simple daemonization
+--------------------
 
-The +RExec::Daemon+ module provides the foundation to develop long-running
+The `RExec::Daemon` module provides the foundation to develop long-running
 background processes. Simply create a daemon class which inherits from 
-+RExec::Daemon::Base+ and you can have a fully featured background daemon 
-with the standard command line interface, e.g. +start+, +restart+, +status+
-and +stop+.
+`RExec::Daemon::Base` and you can have a fully featured background daemon 
+with the standard command line interface, e.g. `start`, `restart`, `status`
+and `stop`.
 
-Along with this, a executable is included called +daemon-exec+ which allows
+Along with this, a executable is included called `daemon-exec` which allows
 for any standard shell script to be run as a background process.
 
-== License
+License
+-------
 
-Copyright (c) 2011 Samuel G. D. Williams. <http://www.oriontransfer.co.nz>
+Copyright (c) 2007, 2009, 2011 Samuel G. D. Williams. <http://www.oriontransfer.co.nz>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
