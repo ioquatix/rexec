@@ -18,6 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+module RemoteProxy
+	def self.foo
+		return :bar
+	end
+end
+
+$connection.handler = RemoteProxy
+
 $connection.run do |object|
   case(object[0])
   when :bounce

@@ -19,7 +19,6 @@
 # THE SOFTWARE.
 
 require 'rexec/version'
-require 'rexec/connection'
 require 'rexec/server'
 require 'rexec/priviledges'
 require 'rexec/to_cmd'

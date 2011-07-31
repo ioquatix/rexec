@@ -1,11 +1,64 @@
 # Copyright (c) 2007, 2011 Samuel G. D. Williams. <http://www.oriontransfer.co.nz>
 # Released under the MIT license. Please see LICENSE.txt for license details.
 
-# This class is as small and independant as possible as it will get sent to clients for execution.
+# This code is as small and independant as possible as it will get sent to clients for execution.
 
 require 'thread'
+require 'monitor'
 
 module RExec
+	
+	# A wrapper for sending method invocations over a Connection
+	class Invocation
+		def initialize(name, arguments)
+			@name = name
+			@arguments = arguments
+		end
+
+		def apply(object)
+			object.send(@name, *@arguments)
+		end
+		
+		class Result
+			def initialize(value)
+				@value = value
+			end
+			
+			attr :value
+		end
+	end
+
+	# A proxy class to create and send Invocation objects via a Connection, and receive a result.
+	class Proxy
+		def initialize(connection)
+			@connection = connection
+			
+			@method_mutex = Mutex.new
+		end
+
+		def method_missing(name, *arguments)
+			invocation = Invocation.new(name, arguments)
+			result = nil
+
+			# Connection provides no transaction support. This means that
+			# if multiple threads are sending and receiving arbirary objects
+			# via the connection, the Proxy object may fail due to out of 
+			# line objects.
+			@method_mutex.synchronize do
+				# Send the invocation.
+				@connection.send_object(invocation)
+
+				# Wait for the result.
+				result = @connection.receive_object
+			end
+			
+			if Invocation::Result === result
+				return result.value
+			else
+				raise InvalidResponse.new("Invalid response received: #{result}")
+			end
+		end
+	end
 
 	# This class represents an abstract connection to another ruby process. The interface does not impose
 	# any structure on the way this communication link works, except for the fact you can send and receive
@@ -44,7 +97,16 @@ module RExec
 
 			@receive_mutex = Mutex.new
 			@send_mutex = Mutex.new
+
+			@proxy = Proxy.new(self)
+			@handler = nil
 		end
+
+		# The object that will handle remote proxy invocations.
+		attr :handler, true
+		
+		# The proxy object that will dispatch RPCs.
+		attr :proxy
 
 		# The pipe used for reading data
 		def input
@@ -89,7 +151,12 @@ module RExec
 					end
 
 					begin
-						yield object
+						if @handler && Invocation === object
+							result = object.apply(@handler)
+							send_object(Invocation::Result.new(result))
+						else
+							yield object
+						end
 					rescue Exception => ex
 						send_object(ex)
 					end

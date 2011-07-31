@@ -39,30 +39,43 @@ end
 BOUNCE = "Apples and Oranges"
 
 class RemoteServerTest < Test::Unit::TestCase
-  def test_block_execution
-    code = Pathname.new(__FILE__).dirname + "./client.rb"
-    
-    RExec::start_server(code.read, COMMAND) do |conn, pid|
-      conn.send_object([:bounce, BOUNCE])
+	def test_block_execution
+		code = Pathname.new(__FILE__).dirname + "./client.rb"
 
-      assert_equal BOUNCE, conn.receive_object
+		RExec::start_server(code.read, COMMAND) do |conn, pid|
+			conn.send_object([:bounce, BOUNCE])
 
-      conn.dump_errors
+			assert_equal BOUNCE, conn.receive_object
 
-      conn.stop
-    end
-  end
-  
-  def test_result_execution
-    code = Pathname.new(__FILE__).dirname + "./client.rb"
-    
-    conn, pid = RExec::start_server(code.read, COMMAND, :passthrough => [])
-    
-    conn.send_object([:bounce, BOUNCE])
-    assert_equal BOUNCE, conn.receive_object
-    
-    conn.dump_errors
+			conn.dump_errors
 
-    conn.stop
-  end
+			conn.stop
+		end
+	end
+
+	def test_result_execution
+		code = Pathname.new(__FILE__).dirname + "./client.rb"
+
+		conn, pid = RExec::start_server(code.read, COMMAND)
+
+		conn.send_object([:bounce, BOUNCE])
+		assert_equal BOUNCE, conn.receive_object
+
+		conn.dump_errors
+
+		conn.stop
+	end
+	
+	def test_proxy
+		code = Pathname.new(__FILE__).dirname + "./client.rb"
+
+		conn, pid = RExec::start_server(code.read, COMMAND)
+
+		assert_equal conn.proxy.foo, :bar
+
+		conn.dump_errors
+
+		conn.stop
+	end
 end
+
