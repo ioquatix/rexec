@@ -7,58 +7,6 @@ require 'thread'
 require 'monitor'
 
 module RExec
-	
-	# A wrapper for sending method invocations over a Connection
-	class Invocation
-		def initialize(name, arguments)
-			@name = name
-			@arguments = arguments
-		end
-
-		def apply(object)
-			object.send(@name, *@arguments)
-		end
-		
-		class Result
-			def initialize(value)
-				@value = value
-			end
-			
-			attr :value
-		end
-	end
-
-	# A proxy class to create and send Invocation objects via a Connection, and receive a result.
-	class Proxy
-		def initialize(connection)
-			@connection = connection
-			
-			@method_mutex = Mutex.new
-		end
-
-		def method_missing(name, *arguments)
-			invocation = Invocation.new(name, arguments)
-			result = nil
-
-			# Connection provides no transaction support. This means that
-			# if multiple threads are sending and receiving arbirary objects
-			# via the connection, the Proxy object may fail due to out of 
-			# line objects.
-			@method_mutex.synchronize do
-				# Send the invocation.
-				@connection.send_object(invocation)
-
-				# Wait for the result.
-				result = @connection.receive_object
-			end
-			
-			if Invocation::Result === result
-				return result.value
-			else
-				raise InvalidResponse.new("Invalid response received: #{result}")
-			end
-		end
-	end
 
 	# This class represents an abstract connection to another ruby process. The interface does not impose
 	# any structure on the way this communication link works, except for the fact you can send and receive
@@ -97,9 +45,6 @@ module RExec
 
 			@receive_mutex = Mutex.new
 			@send_mutex = Mutex.new
-
-			@proxy = Proxy.new(self)
-			@handler = nil
 		end
 
 		# The object that will handle remote proxy invocations.
