@@ -81,18 +81,20 @@ module RExec
 		end
 
 		if block_given?
-			Task.open(command, options) do |process|
-				conn = Connection.build(process, options, &send_code)
+			Task.open(command, options) do |task|
+				conn = Connection.build(task, options, &send_code)
 
-				yield conn, process.pid
-				
-				conn.stop
+				begin
+					yield conn, task
+				ensure
+					conn.stop
+				end
 			end
 		else
-			process = Task.open(command, options)
-			conn = Connection.build(process, options, &send_code)
+			task = Task.open(command, options)
+			conn = Connection.build(task, options, &send_code)
 
-			return conn, process.pid
+			return conn, task
 		end
 	end
 end
