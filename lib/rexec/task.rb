@@ -287,11 +287,16 @@ module RExec
 				if command.respond_to? :call
 					command.call
 				elsif Array === command
+					command = command.dup
+					
 					# If command is a Pathname, we need to convert it to an absolute path if possible,
 					# otherwise if it is relative it might cause problems.
 					if command[0].respond_to? :realpath
 						command[0] = command[0].realpath
 					end
+					
+					# exec expects an array of Strings:
+					command.collect! { |item| item.to_s }
 					
 					exec *command
 				else
