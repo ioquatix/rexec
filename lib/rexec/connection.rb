@@ -39,7 +39,9 @@ module RExec
 		def initialize(input, output, error = nil)
 			@input = input
 			@output = output
+
 			@running = true
+			@exceptions = :send
 
 			@error = error
 
@@ -49,6 +51,9 @@ module RExec
 
 		# The object that will handle remote proxy invocations.
 		attr :handler, true
+		
+		# Whether to send exceptions across the wire, or handle normally (e.g. print to stdout):
+		attr :exceptions, true
 		
 		# The proxy object that will dispatch RPCs.
 		attr :proxy
@@ -96,14 +101,13 @@ module RExec
 					end
 
 					begin
-						if @handler && Invocation === object
-							result = object.apply(@handler)
-							send_object(Invocation::Result.new(result))
-						else
-							yield object
-						end
+						yield object
 					rescue Exception => ex
-						send_object(ex)
+						if @exceptions == :send
+							send_object(ex)
+						else
+							raise
+						end
 					end
 				end
 			end
