@@ -72,8 +72,11 @@ module RExec
 		options[:passthrough] = :err unless options[:passthrough]
 
 		send_code = Proc.new do |cin|
-			cin.puts(CONNECTION_CODE)
-			cin.puts(CLIENT_CODE)
+			unless options[:raw]
+				cin.puts(CONNECTION_CODE)
+				cin.puts(CLIENT_CODE)
+			end
+			
 			cin.puts(code)
 		end
 
