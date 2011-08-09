@@ -21,8 +21,8 @@
 module RExec
 	module VERSION
 		MAJOR = 1
-		MINOR = 3
-		TINY  = 0
+		MINOR = 4
+		TINY  = 1
 
 		STRING = [MAJOR, MINOR, TINY].join('.')
 	end
