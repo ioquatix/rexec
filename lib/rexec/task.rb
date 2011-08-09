@@ -315,9 +315,17 @@ module RExec
 			if block_given?
 				begin
 					yield task
+					
+					# Close all input pipes if not done already.
 					task.close_input
+					
+					# The task has stopped if task.wait returns correctly.
 					return task.wait
+				rescue Interrupt
+					# If task.wait is interrupted, we should also interrupt the child process
+					task.kill
 				ensure
+					# Print out any remaining data from @output or @error
 					task.close
 				end
 			else
@@ -325,7 +333,7 @@ module RExec
 			end
 		end
 
-		def initialize(input, output, error, pid) # :nodoc:
+		def initialize(input, output, error, pid)
 			@input = input
 			@output = output
 			@error = error
