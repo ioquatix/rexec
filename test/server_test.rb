@@ -35,7 +35,7 @@ class ServerTest < Test::Unit::TestCase
     connection_started = false
     object_received = false
 
-    RExec::start_server(code.read, "ruby", :passthrough => []) do |conn, pid|
+    RExec::start_server(code.read, "ruby", :passthrough => []) do |conn, task|
       connection_started = true
       conn.send_object([:bounce, sobj])
 
@@ -66,7 +66,7 @@ class ServerTest < Test::Unit::TestCase
 
     test_obj = [1, 2, 3, 4, "five"]
 
-    RExec::start_server(code.read, "/bin/sh -c ruby", :passthrough => []) do |conn, pid|
+    RExec::start_server(code.read, "/bin/sh -c ruby", :passthrough => []) do |conn, task|
       connection_started = true
       conn.send_object([:bounce, test_obj])
 
@@ -84,7 +84,7 @@ class ServerTest < Test::Unit::TestCase
 
     test_obj = [1, 2, 3, 4, "five"]
 
-    conn, pid = RExec::start_server(code.read, "/bin/sh -c ruby", :passthrough => [])
+    conn, task = RExec::start_server(code.read, "/bin/sh -c ruby", :passthrough => [])
     conn.send_object([:bounce, test_obj])
 
     assert_equal test_obj, conn.receive_object
