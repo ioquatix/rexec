@@ -40,31 +40,29 @@ class TestDaemon < RExec::Daemon::Base
 		puts "Starting server..."
     
 		@@rpc_server = WEBrick::HTTPServer.new(
-		:Port => 11235,
-		:BindAddress => "0.0.0.0",
-		:SSLEnable => true,
-		:SSLVerifyClient => OpenSSL::SSL::VERIFY_NONE,
-		:SSLCertName => [["CN", WEBrick::Utils::getservername]])
-    
+			:Port => 31337,
+			:BindAddress => "0.0.0.0"
+		)
+
 		@@listener = XMLRPC::WEBrickServlet.new
-    
+
 		@@listener.add_handler("add") do |amount|
 			@@count ||= 0
 			@@count += amount
 		end
-    
+
 		@@listener.add_handler("total") do
 			@@count
 		end
-    
+
 		@@rpc_server.mount("/RPC2", @@listener)
-    
+
 		$stdout.flush
 		$stderr.flush
-    
+
 		@@rpc_server.start
 	end
-  
+
 	def self.shutdown
 		puts "Shutting down server..."
 		@@rpc_server.shutdown

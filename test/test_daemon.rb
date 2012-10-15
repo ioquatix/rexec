@@ -29,15 +29,15 @@ class DaemonTest < Test::Unit::TestCase
 	DAEMON = (Pathname.new(__FILE__).dirname + "./daemon.rb").realpath
 
 	def setup
-		system(DAEMON, "start")
+		system(DAEMON.to_s, "start")
 	end
 
 	def teardown
-		system(DAEMON, "stop")
+		system(DAEMON.to_s, "stop")
 	end
 
 	def test_connection
-		rpc = XMLRPC::Client.new_from_uri("https://localhost:11235")
+		rpc = XMLRPC::Client.new_from_uri("http://localhost:31337")
 		rpc.call("add", 10)
 
 		total = rpc.call("total")
