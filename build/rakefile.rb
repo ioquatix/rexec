@@ -1,14 +1,14 @@
 
-# Automatic Gem Build Script v2.0
+# Automatic Gem Build Script v3.0
 
 require 'fileutils'
 require 'rubygems'
 
-MasterGemspec = "gemspec.master"
+GemspecPath = "gemspec.rb"
 
 desc 'Build a gemspec file'
 task :build_gemspec do
-  $spec = Gem::Specification.load(MasterGemspec)
+  $spec = Gem::Specification.load(GemspecPath)
   
   $versioned_gem = "#{$spec.name}-#{$spec.version}.gem"
   $versioned_gemspec = "#{$spec.name}-#{$spec.version}.gemspec"
