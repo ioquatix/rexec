@@ -20,30 +20,28 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'rubygems'
+require 'helper'
+
 require 'pathname'
 require 'xmlrpc/client'
-require 'test/unit'
 
 class DaemonTest < Test::Unit::TestCase
-  DAEMON = (Pathname.new(__FILE__).dirname + "./daemon.rb").realpath
-  def setup
-    system(DAEMON, "start")
-    
-    # Daemon takes a moment to become fully operational
-    sleep(5)
-  end
-  
-  def teardown
-    system(DAEMON, "stop")
-  end
+	DAEMON = (Pathname.new(__FILE__).dirname + "./daemon.rb").realpath
 
-  def test_connection
-    rpc = XMLRPC::Client.new_from_uri("https://localhost:11235")
-    rpc.call("add", 10)
-    
-    total = rpc.call("total")
-    
-    assert_equal 10, total
-  end
+	def setup
+		system(DAEMON, "start")
+	end
+
+	def teardown
+		system(DAEMON, "stop")
+	end
+
+	def test_connection
+		rpc = XMLRPC::Client.new_from_uri("https://localhost:11235")
+		rpc.call("add", 10)
+
+		total = rpc.call("total")
+
+		assert_equal 10, total
+	end
 end

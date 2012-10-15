@@ -20,19 +20,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'rubygems'
+require 'helper'
+
 require 'rexec'
 
 CLIENT = <<EOF
 
 $connection.run do |path|
-  listing = []
+	listing = []
 
-  IO.popen("ls -la " + path.dump, "r+") do |ls|
-    listing = ls.readlines
-  end
+	IO.popen("ls -la " + path.dump, "r+") do |ls|
+		listing = ls.readlines
+	end
 
-  $connection.send_object(listing)
+	$connection.send_object(listing)
 end
 
 EOF
@@ -41,14 +42,14 @@ command = ARGV[0] || "ruby"
 
 puts "Starting server..."
 RExec::start_server(CLIENT, command) do |conn, pid|
-  puts "Sending path..."
-  conn.send_object("/")
+	puts "Sending path..."
+	conn.send_object("/")
 
-  puts "Waiting for response..."
-  listing = conn.receive_object
+	puts "Waiting for response..."
+	listing = conn.receive_object
 
-  puts "Received listing:"
-  listing.each do |entry|
-    puts "\t#{entry}"
-  end
+	puts "Received listing:"
+	listing.each do |entry|
+		puts "\t#{entry}"
+	end
 end

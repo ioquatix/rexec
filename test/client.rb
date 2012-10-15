@@ -19,18 +19,18 @@
 # THE SOFTWARE.
 
 $connection.run do |object|
-  case(object[0])
-  when :bounce
-    $stderr.puts("Bouncing #{object[1].inspect}...")
-    $connection.send_object(object[1])
-  when :exception
-    $stderr.puts("Raising exception...")
-    raise Exception.new("I love exceptions!")
-  when :stop
-    $stderr.puts("Stopping connection manually...")
-    $connection.stop
-  when :stderr
-    $stderr.puts object[1]
-    $stderr.flush
-  end
+	case(object[0])
+	when :bounce
+		$stderr.puts("Bouncing #{object[1].inspect}...")
+		$connection.send_object(object[1])
+	when :exception
+		$stderr.puts("Raising exception...")
+		raise Exception.new("I love exceptions!")
+	when :stop
+		$stderr.puts("Stopping connection manually...")
+		$connection.stop
+	when :stderr
+		$stderr.puts object[1]
+		$stderr.flush
+	end
 end

@@ -23,9 +23,8 @@
 # This script is used to test actual remote connections
 # e.g. ./test_remote.rb "ssh haru.oriontransfer.org"
 
-require 'rubygems'
+require 'helper'
 
-require 'test/unit'
 require 'fileutils'
 require 'pathname'
 require 'rexec'

@@ -20,8 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'rubygems'
+$LOAD_PATH.unshift File.expand_path("../../lib/", __FILE__)
 
+require 'rubygems'
 require 'pathname'
 
 require 'rexec'
@@ -33,41 +34,41 @@ require 'xmlrpc/server'
 
 # Very simple XMLRPC daemon
 class TestDaemon < RExec::Daemon::Base
-  @@var_directory = "/tmp/ruby-test/var"
+	@@var_directory = "/tmp/ruby-test/var"
   
-  def self.run
-    puts "Starting server..."
+	def self.run
+		puts "Starting server..."
     
-    @@rpc_server = WEBrick::HTTPServer.new(
-      :Port => 11235,
-      :BindAddress => "0.0.0.0",
-      :SSLEnable => true,
-      :SSLVerifyClient => OpenSSL::SSL::VERIFY_NONE,
-      :SSLCertName => [["CN", WEBrick::Utils::getservername]])
+		@@rpc_server = WEBrick::HTTPServer.new(
+		:Port => 11235,
+		:BindAddress => "0.0.0.0",
+		:SSLEnable => true,
+		:SSLVerifyClient => OpenSSL::SSL::VERIFY_NONE,
+		:SSLCertName => [["CN", WEBrick::Utils::getservername]])
     
-    @@listener = XMLRPC::WEBrickServlet.new
+		@@listener = XMLRPC::WEBrickServlet.new
     
-    @@listener.add_handler("add") do |amount|
-      @@count ||= 0
-      @@count += amount
-    end
+		@@listener.add_handler("add") do |amount|
+			@@count ||= 0
+			@@count += amount
+		end
     
-    @@listener.add_handler("total") do
-      @@count
-    end
+		@@listener.add_handler("total") do
+			@@count
+		end
     
-    @@rpc_server.mount("/RPC2", @@listener)
+		@@rpc_server.mount("/RPC2", @@listener)
     
-    $stdout.flush
-    $stderr.flush
+		$stdout.flush
+		$stderr.flush
     
-    @@rpc_server.start
-  end
+		@@rpc_server.start
+	end
   
-  def self.shutdown
+	def self.shutdown
 		puts "Shutting down server..."
-    @@rpc_server.shutdown
-  end
+		@@rpc_server.shutdown
+	end
 end
 
 TestDaemon.daemonize
