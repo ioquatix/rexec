@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'rexec/daemon/pidfile'
+require 'rexec/daemon/process_file'
 require 'rexec/task'
 
 module RExec
@@ -28,21 +28,19 @@ module RExec
 
 		# This module contains functionality related to starting and stopping the daemon, and code for processing command line input.
 		module Controller
-			# This function is called from the daemon executable. It processes ARGV and checks whether the user is asking for
-			# +start+, +stop+, +restart+ or +status+.
+			# This function is called from the daemon executable. It processes ARGV and checks whether the user is asking for `start`, `stop`, `restart`, `status`.
 			def self.daemonize(daemon)
-				#puts "Running in #{WorkingDirectory}, logs in #{LogDirectory}"
-				case !ARGV.empty? && ARGV[0]
+				case ARGV.shift
 				when 'start'
 					start(daemon)
 					status(daemon)
 				when 'stop'
 					stop(daemon)
 					status(daemon)
-					PidFile.cleanup(daemon)
+					ProcessFile.cleanup(daemon)
 				when 'restart'
 					stop(daemon)
-					PidFile.cleanup(daemon)
+					ProcessFile.cleanup(daemon)
 					start(daemon)
 					status(daemon)
 				when 'status'
@@ -57,7 +55,7 @@ module RExec
 			def self.start(daemon)
 				puts "Starting daemon..."
 
-				case PidFile.status(daemon)
+				case ProcessFile.status(daemon)
 				when :running
 					$stderr.puts "Daemon already running!"
 					return
@@ -66,26 +64,26 @@ module RExec
 				else
 					$stderr.puts "Daemon in unknown state! Will clear previous state and continue."
 					status(daemon)
-					PidFile.clear(daemon)
+					ProcessFile.clear(daemon)
 				end
 
 				daemon.prefork
-				daemon.mark_err_log
+				daemon.mark_log
 
 				fork do
 					Process.setsid
 					exit if fork
 
-					PidFile.store(daemon, Process.pid)
+					ProcessFile.store(daemon, Process.pid)
 
 					File.umask 0000
 					Dir.chdir daemon.working_directory
 
 					$stdin.reopen "/dev/null"
-					$stdout.reopen daemon.log_fn, "a"
+					$stdout.reopen daemon.log_file_path, "a"
 					$stdout.sync = true
 					
-					$stderr.reopen daemon.err_fn, "a"
+					$stderr.reopen $stdout
 					$stderr.sync = true
 
 					begin
@@ -130,7 +128,7 @@ module RExec
 				puts "Waiting for daemon to start..."
 				sleep 0.1
 				timer = TIMEOUT
-				pid = PidFile.recall(daemon)
+				pid = ProcessFile.recall(daemon)
 
 				while pid == nil and timer > 0
 					# Wait a moment for the forking to finish...
@@ -140,7 +138,7 @@ module RExec
 					# If the daemon has crashed, it is never going to start...
 					break if daemon.crashed?
 
-					pid = PidFile.recall(daemon)
+					pid = ProcessFile.recall(daemon)
 
 					timer -= 1
 				end
@@ -148,15 +146,15 @@ module RExec
 
 			# Prints out the status of the daemon
 			def self.status(daemon)
-				case PidFile.status(daemon)
+				case ProcessFile.status(daemon)
 				when :running
-					puts "Daemon status: running pid=#{PidFile.recall(daemon)}"
+					puts "Daemon status: running pid=#{ProcessFile.recall(daemon)}"
 				when :unknown
 					if daemon.crashed?
 						puts "Daemon status: crashed"
 
 						$stdout.flush
-						daemon.tail_err_log($stderr)
+						daemon.tail_error_log($stderr)
 					else
 						puts "Daemon status: unknown"
 					end
@@ -170,27 +168,27 @@ module RExec
 				puts "Stopping daemon..."
 
 				# Check if the pid file exists...
-				if !File.file?(daemon.pid_fn)
+				unless File.file?(daemon.process_file_path)
 					puts "Pid file not found. Is the daemon running?"
 					return
 				end
 
-				pid = PidFile.recall(daemon)
+				pid = ProcessFile.recall(daemon)
 
 				# Check if the daemon is already stopped...
-				unless PidFile.running(daemon)
+				unless ProcessFile.running(daemon)
 					puts "Pid #{pid} is not running. Has daemon crashed?"
 					return
 				end
 
-				pid = PidFile.recall(daemon)
+				pid = ProcessFile.recall(daemon)
 				Process.kill("INT", pid)
 				sleep 0.1
 
 				# Kill/Term loop - if the daemon didn't die easily, shoot
 				# it a few more times.
 				attempts = 5
-				while PidFile.running(daemon) and attempts > 0
+				while ProcessFile.running(daemon) and attempts > 0
 					sig = (attempts < 2) ? "KILL" : "TERM"
 
 					puts "Sending #{sig} to pid #{pid}..."
@@ -201,13 +199,13 @@ module RExec
 				end
 
 				# If after doing our best the daemon is still running (pretty odd)...
-				if PidFile.running(daemon)
+				if ProcessFile.running(daemon)
 					puts "Daemon appears to be still running!"
 					return
 				end
 
 				# Otherwise the daemon has been stopped.
-				PidFile.clear(daemon)
+				ProcessFile.clear(daemon)
 			end
 		end
 	end

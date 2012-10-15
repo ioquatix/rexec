@@ -35,84 +35,79 @@ module RExec
 		# 	end
 		# 	
 		# 	Server.daemonize
+		#
+		# The base directory specifies a path such that:
+		#   working_directory = #{@@base_directory}/#{daemon_name}
+		#   log_directory = #{working_directory}/log
+		#   log_file_path = #{log_directory}/daemon.log
+		#   runtime_directory = #{working_directory}/run
+		#   process_file_path = #{runtime_directory}/daemon.pid
 		class Base
-			@@var_directory = nil
-			@@log_directory = nil
-			@@pid_directory = nil
+			# For a system-level daemon you might want to specify "/var"
+			@@base_directory = "."
 
 			# Return the name of the daemon
 			def self.daemon_name
 				return name.gsub(/[^a-zA-Z0-9]+/, '-')
 			end
 
-			# Base directory for daemon log files / run files
-			def self.var_directory
-				@@var_directory || File.join("", "var")
-			end
-
-			# The directory the daemon will run in (Dir.chdir)
+			# The directory the daemon will run in.
 			def self.working_directory
-				var_directory
+				File.join(@@base_directory, daemon_name)
 			end
 
-			# Return the directory to store log files in
+			# Return the directory to store log files in.
 			def self.log_directory
-				@@log_directory || File.join(var_directory, "log", daemon_name)
+				File.join(working_directory, "log")
 			end
 
-			# Standard log file for errors
-			def self.err_fn
-				File.join(log_directory, "stderr.log")
+			# Standard log file for stdout and stderr.
+			def self.log_file_path
+				File.join(log_directory, "daemon.log")
 			end
 
-			# Standard log file for normal output
-			def self.log_fn
-				File.join(log_directory, "stdout.log")
+			# Runtime data directory for the daemon.
+			def self.runtime_directory
+				File.join(working_directory, "run")
 			end
 
-			# Standard location of pid file
-			def self.pid_directory
-				@@pid_directory || File.join(var_directory, "run", daemon_name)
+			# Standard location of process pid file.
+			def self.process_file_path
+				File.join(runtime_directory, "daemon.pid")
 			end
 
-			# Standard pid file
-			def self.pid_fn
-				File.join(pid_directory, "#{daemon_name}.pid")
+			# Mark the output log.
+			def self.mark_log
+				File.open(log_file_path, "a") do |log_file|
+					log_file.puts "=== Log Marked @ #{Time.now.to_s} ==="
+				end
 			end
 
-			# Mark the error log
-			def self.mark_err_log
-				fp = File.open(err_fn, "a")
-				fp.puts "=== Error Log Opened @ #{Time.now.to_s} ==="
-				fp.close
-			end
-
-			# Prints some information relating to daemon startup problems
-			def self.tail_err_log(outp)
+			# Prints some information relating to daemon startup problems.
+			def self.tail_log(output)
 				lines = []
 
-				File.open(err_fn, "r") do |fp|
-					fp.seek_end
+				File.open(error_log_path, "r") do |log_file|
+					log_file.seek_end
 
-					fp.reverse_each_line do |line|
+					log_file.reverse_each_line do |line|
 						lines << line
-						break if line.match("=== Error Log") || line.match("=== Daemon Exception Backtrace")
+						break if line.match("=== Log Marked") || line.match("=== Daemon Exception Backtrace")
 					end
 				end
 
 				lines.reverse_each do |line|
-					outp.puts line
+					output.puts line
 				end
 			end
 
-			# Check the last few lines of the log file to find out if
-			# the daemon crashed.
+			# Check the last few lines of the log file to find out if the daemon crashed.
 			def self.crashed?
-				File.open(err_fn, "r") do |fp|
-					fp.seek_end
+				File.open(error_log_path, "r") do |log_file|
+					log_file.seek_end
 
 					count = 2
-					fp.reverse_each_line do |line|
+					log_file.reverse_each_line do |line|
 						return true if line.match("=== Daemon Crashed")
 
 						count -= 1
@@ -146,12 +141,10 @@ module RExec
 
 			# The main function to setup any environment required by the daemon
 			def self.prefork
-				@@var_directory = File.expand_path(@@var_directory) if @@var_directory
-				@@log_directory = File.expand_path(@@log_directory) if @@log_directory
-				@@pid_directory = File.expand_path(@@pid_directory) if @@pid_directory
+				@@base_directory = File.expand_path(@@base_directory) if @@base_directory
 
 				FileUtils.mkdir_p(log_directory)
-				FileUtils.mkdir_p(pid_directory)
+				FileUtils.mkdir_p(runtime_directory)
 			end
 
 			# The main function to start the daemon

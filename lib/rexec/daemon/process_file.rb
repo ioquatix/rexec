@@ -21,21 +21,21 @@
 module RExec
 	module Daemon
 		# This module controls the storage and retrieval of process id files.
-		module PidFile
+		module ProcessFile
 			# Saves the pid for the given daemon
 			def self.store(daemon, pid)
-				File.open(daemon.pid_fn, 'w') {|f| f << pid}
+				File.open(daemon.process_file_path, 'w') {|f| f << pid}
 			end
 
 			# Retrieves the pid for the given daemon
 			def self.recall(daemon)
-				IO.read(daemon.pid_fn).to_i rescue nil
+				IO.read(daemon.process_file_path).to_i rescue nil
 			end
 
 			# Removes the pid saved for a particular daemon
 			def self.clear(daemon)
-				if File.exist? daemon.pid_fn
-					FileUtils.rm(daemon.pid_fn)
+				if File.exist? daemon.process_file_path
+					FileUtils.rm(daemon.process_file_path)
 				end
 			end
 
@@ -58,8 +58,8 @@ module RExec
 			# This function returns the status of the daemon. This can be one of +:running+, +:unknown+ (pid file exists but no 
 			# corresponding process can be found) or +:stopped+.
 			def self.status(daemon)
-				if File.exist? daemon.pid_fn
-					return PidFile.running(daemon) ? :running : :unknown
+				if File.exist? daemon.process_file_path
+					return ProcessFile.running(daemon) ? :running : :unknown
 				else
 					return :stopped
 				end
