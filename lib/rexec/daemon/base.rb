@@ -53,7 +53,7 @@ module RExec
 
 			# The directory the daemon will run in.
 			def self.working_directory
-				File.join(@@base_directory, daemon_name)
+				@@base_directory
 			end
 
 			# Return the directory to store log files in.
@@ -63,7 +63,7 @@ module RExec
 
 			# Standard log file for stdout and stderr.
 			def self.log_file_path
-				File.join(log_directory, "daemon.log")
+				File.join(log_directory, "#{daemon_name}.log")
 			end
 
 			# Runtime data directory for the daemon.
@@ -73,7 +73,7 @@ module RExec
 
 			# Standard location of process pid file.
 			def self.process_file_path
-				File.join(runtime_directory, "daemon.pid")
+				File.join(runtime_directory, "#{daemon_name}.pid")
 			end
 
 			# Mark the output log.
