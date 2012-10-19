@@ -15,6 +15,7 @@ Dir.chdir("../") do
 		s.executables << 'daemon-exec'
 
 		s.has_rdoc = "yard"
+		s.add_dependency "rainbow"
 
 		s.test_files = FileList["test/*_test.rb"]
 	end

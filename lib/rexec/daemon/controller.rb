@@ -21,6 +21,8 @@
 require 'rexec/daemon/process_file'
 require 'rexec/task'
 
+require 'rainbow'
+
 module RExec
 	module Daemon
 		# Daemon startup timeout
@@ -53,16 +55,16 @@ module RExec
 
 			# This function starts the supplied daemon
 			def self.start(daemon)
-				puts "Starting daemon..."
+				puts "Starting daemon...".color(:blue)
 
 				case ProcessFile.status(daemon)
 				when :running
-					$stderr.puts "Daemon already running!"
+					$stderr.puts "Daemon already running!".color(:blue)
 					return
 				when :stopped
 					# We are good to go...
 				else
-					$stderr.puts "Daemon in unknown state! Will clear previous state and continue."
+					$stderr.puts "Daemon in unknown state! Will clear previous state and continue.".color(:red)
 					status(daemon)
 					ProcessFile.clear(daemon)
 				end
@@ -125,14 +127,14 @@ module RExec
 					end
 				end
 
-				puts "Waiting for daemon to start..."
+				puts "Waiting for daemon to start...".color(:blue)
 				sleep 0.1
 				timer = TIMEOUT
 				pid = ProcessFile.recall(daemon)
 
 				while pid == nil and timer > 0
 					# Wait a moment for the forking to finish...
-					puts "Waiting for daemon to start (#{timer}/#{TIMEOUT})"
+					puts "Waiting for daemon to start (#{timer}/#{TIMEOUT})".color(:blue)
 					sleep 1
 
 					# If the daemon has crashed, it is never going to start...
@@ -148,28 +150,29 @@ module RExec
 			def self.status(daemon)
 				case ProcessFile.status(daemon)
 				when :running
-					puts "Daemon status: running pid=#{ProcessFile.recall(daemon)}"
+					puts "Daemon status: running pid=#{ProcessFile.recall(daemon)}".color(:green)
 				when :unknown
 					if daemon.crashed?
-						puts "Daemon status: crashed"
+						puts "Daemon status: crashed".color(:red)
 
 						$stdout.flush
-						daemon.tail_error_log($stderr)
+						$stderr.puts "Dumping daemon crash log:".color(:red)
+						daemon.tail_log($stderr)
 					else
-						puts "Daemon status: unknown"
+						puts "Daemon status: unknown".color(:red)
 					end
 				when :stopped
-					puts "Daemon status: stopped"
+					puts "Daemon status: stopped".color(:blue)
 				end
 			end
 
 			# Stops the daemon process.
 			def self.stop(daemon)
-				puts "Stopping daemon..."
+				puts "Stopping daemon...".color(:blue)
 
 				# Check if the pid file exists...
 				unless File.file?(daemon.process_file_path)
-					puts "Pid file not found. Is the daemon running?"
+					puts "Pid file not found. Is the daemon running?".color(:red)
 					return
 				end
 
@@ -177,7 +180,7 @@ module RExec
 
 				# Check if the daemon is already stopped...
 				unless ProcessFile.running(daemon)
-					puts "Pid #{pid} is not running. Has daemon crashed?"
+					puts "Pid #{pid} is not running. Has daemon crashed?".color(:red)
 					return
 				end
 
@@ -191,7 +194,7 @@ module RExec
 				while ProcessFile.running(daemon) and attempts > 0
 					sig = (attempts < 2) ? "KILL" : "TERM"
 
-					puts "Sending #{sig} to pid #{pid}..."
+					puts "Sending #{sig} to pid #{pid}...".color(:red)
 					Process.kill(sig, pid)
 
 					sleep 1
@@ -200,7 +203,7 @@ module RExec
 
 				# If after doing our best the daemon is still running (pretty odd)...
 				if ProcessFile.running(daemon)
-					puts "Daemon appears to be still running!"
+					puts "Daemon appears to be still running!".color(:red)
 					return
 				end
 
