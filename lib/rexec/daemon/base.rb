@@ -87,7 +87,7 @@ module RExec
 			def self.tail_log(output)
 				lines = []
 
-				File.open(error_log_path, "r") do |log_file|
+				File.open(log_file_path, "r") do |log_file|
 					log_file.seek_end
 
 					log_file.reverse_each_line do |line|
@@ -103,10 +103,10 @@ module RExec
 
 			# Check the last few lines of the log file to find out if the daemon crashed.
 			def self.crashed?
-				File.open(error_log_path, "r") do |log_file|
+				File.open(log_file_path, "r") do |log_file|
 					log_file.seek_end
 
-					count = 2
+					count = 3
 					log_file.reverse_each_line do |line|
 						return true if line.match("=== Daemon Crashed")
 
