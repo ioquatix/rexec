@@ -1,5 +1,4 @@
-# A sample Gemfile
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
-gem "rake"
-gem "rainbow"
+# Specify your gem's dependencies in rexec.gemspec
+gemspec

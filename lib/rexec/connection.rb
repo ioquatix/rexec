@@ -50,10 +50,10 @@ module RExec
 		end
 
 		# The object that will handle remote proxy invocations.
-		attr :handler, true
+		attr_accessor :handler
 		
 		# Whether to send exceptions across the wire, or handle normally (e.g. print to stdout):
-		attr :exceptions, true
+		attr_accessor :exceptions
 		
 		# The proxy object that will dispatch RPCs.
 		attr :proxy

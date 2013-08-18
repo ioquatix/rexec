@@ -21,7 +21,7 @@
 # THE SOFTWARE.
 
 # This script is used to test actual remote connections
-# e.g. ./test_remote.rb "ssh haru.oriontransfer.org"
+# e.g. ./test_remote_server.rb "ssh haru.oriontransfer.org"
 
 require 'helper'
 
@@ -65,4 +65,3 @@ class RemoteServerTest < Test::Unit::TestCase
 		conn.stop
 	end
 end
-

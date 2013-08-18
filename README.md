@@ -1,13 +1,6 @@
-RExec
-=====
+# RExec
 
-* Author: Samuel G. D. Williams (<http://www.oriontransfer.co.nz>)
-* Copyright (C) 2007, 2009, 2011 Samuel G. D. Williams.
-* Released under the MIT license.
-
-RExec stands for Remote Execute and provides support for executing processes 
-both locally and remotely. It provides a number of different tools to assist
-with running Ruby code:
+RExec stands for Remote Execute and provides support for executing processes both locally and remotely. It provides a number of different tools to assist with running Ruby code:
 
 * A framework to send Ruby code to a remote server for execution.
 * A framework for writing command line daemons (i.e. `start`, `restart`, `stop`, `status`).
@@ -18,24 +11,37 @@ with running Ruby code:
 
 For more information please see the [project page][1].
 
-[1]: http://www.oriontransfer.co.nz/gems/rexec
+[1]: http://www.codeotaku.com/projects/rexec
 
-Comprehensive process management
---------------------------------
+## Installation
+
+Add this line to your application's Gemfile:
+
+    gem 'rexec'
+
+And then execute:
+
+    $ bundle
+
+Or install it yourself as:
+
+    $ gem install rexec
+
+## Usage
+
+### Comprehensive process management
 
 `RExec::Task` provides a comprehensive wrapper for low level process execution
 and life-cycle management. You can easy spawn new child processes, background
 processes and execute Ruby code in a child instance.
 
-Light weight bi-directional communication
------------------------------------------
+### Light weight bi-directional communication
 
 The `RExec::Connection` provides a simple process based API for communicating 
 with distant instances of Ruby. These can either be local or remote, such
 as over SSH.
 
-Simple daemonization
---------------------
+### Simple daemonization
 
 The `RExec::Daemon` module provides the foundation to develop long-running
 background processes. Simply create a daemon class which inherits from 
@@ -46,10 +52,19 @@ and `stop`.
 Along with this, a executable is included called `daemon-exec` which allows
 for any standard shell script to be run as a background process.
 
-License
--------
+## Contributing
 
-Copyright (c) 2007, 2009, 2011 Samuel G. D. Williams. <http://www.oriontransfer.co.nz>
+1. Fork it
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create new Pull Request
+
+## License
+
+Released under the MIT license.
+
+Copyright, 2012, by [Samuel G. D. Williams](http://www.codeotaku.com/samuel-williams).
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
