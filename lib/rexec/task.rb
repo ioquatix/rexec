@@ -115,6 +115,27 @@ module RExec
 			end
 		end
 
+		def self.prepare_child_environment(command, options)
+			if options[:env!]
+				ENV.clear
+				ENV.update(options[:env!])
+			elsif options[:env]
+				ENV.update(options[:env])
+			end
+
+			if options[:umask]
+				File.umask(options[:umask])
+			end
+
+			if options[:chdir]
+				Dir.chdir(options[:chdir])
+			end
+
+			if options[:preflight]
+				preflight.call(command, options)
+			end
+		end
+
 		public
 		# Returns true if the given pid is a current process
 		def self.running?(pid)
@@ -265,30 +286,11 @@ module RExec
 				STDOUT.reopen(cout[WR]) if cout[WR]
 				STDERR.reopen(cerr[WR]) if cerr[WR]
 
-				if options[:env!]
-					ENV.clear
-					ENV.update(options[:env!])
-				elsif options[:env]
-					ENV.update(options[:env])
-				end
-
-				if options[:umask]
-					File.umask(options[:umask])
-				end
-
-				if options[:chdir]
-					Dir.chdir(options[:chdir])
-				end
-
-				if options[:preflight]
-					preflight.call(command, options)
-				end
+				prepare_child_environment(command, options)
 
 				if command.respond_to? :call
 					command.call
 				elsif Array === command
-					command = command.dup
-					
 					# If command is a Pathname, we need to convert it to an absolute path if possible,
 					# otherwise if it is relative it might cause problems.
 					if command[0].respond_to? :realpath
@@ -297,6 +299,9 @@ module RExec
 					
 					# exec expects an array of Strings:
 					command.collect! { |item| item.to_s }
+					
+					# Ensure that we DON'T use the shell for execution:
+					command[0] = [command[0], command[0]]
 					
 					exec *command
 				else
