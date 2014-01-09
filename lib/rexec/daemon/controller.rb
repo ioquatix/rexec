@@ -89,32 +89,11 @@ module RExec
 					$stderr.sync = true
 
 					begin
-						error = nil
+						daemon.run
 						
-						main = Thread.new do
-							begin
-								daemon.run
-							rescue
-								error = $!
-							end
-						end
-
 						trap("INT") do
-							begin
-								daemon.shutdown
-								main.exit
-							rescue
-								error = $!
-							end
+							daemon.shutdown
 						end
-
-						trap("TERM") do
-							exit!
-						end
-
-						main.join
-
-						raise error if error
 					rescue
 						$stderr.puts "=== Daemon Exception Backtrace @ #{Time.now.to_s} ==="
 						$stderr.puts "#{$!.class}: #{$!.message}"
@@ -184,8 +163,8 @@ module RExec
 					return
 				end
 
-				pid = ProcessFile.recall(daemon)
-				Process.kill("INT", pid)
+				pgid = -Process.getpgid(pid)
+				Process.kill("INT", pgid)
 				sleep 0.1
 
 				sleep 1 if ProcessFile.running(daemon)
@@ -196,8 +175,8 @@ module RExec
 				while ProcessFile.running(daemon) and attempts > 0
 					sig = (attempts >= 2) ? "KILL" : "TERM"
 
-					puts "Sending #{sig} to pid #{pid}...".color(:red)
-					Process.kill(sig, pid)
+					puts "Sending #{sig} to process group #{pgid}...".color(:red)
+					Process.kill(sig, pgid)
 
 					attempts -= 1
 					sleep 1
