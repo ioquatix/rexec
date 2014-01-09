@@ -188,17 +188,19 @@ module RExec
 				Process.kill("INT", pid)
 				sleep 0.1
 
+				sleep 1 if ProcessFile.running(daemon)
+
 				# Kill/Term loop - if the daemon didn't die easily, shoot
 				# it a few more times.
 				attempts = 5
 				while ProcessFile.running(daemon) and attempts > 0
-					sig = (attempts < 2) ? "KILL" : "TERM"
+					sig = (attempts >= 2) ? "KILL" : "TERM"
 
 					puts "Sending #{sig} to pid #{pid}...".color(:red)
 					Process.kill(sig, pid)
 
-					sleep 1
 					attempts -= 1
+					sleep 1
 				end
 
 				# If after doing our best the daemon is still running (pretty odd)...
