@@ -21,7 +21,7 @@
 require 'rexec/daemon/process_file'
 require 'rexec/task'
 
-require 'rainbow'
+require 'rainbow/ext/string'
 
 module RExec
 	module Daemon
