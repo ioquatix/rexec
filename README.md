@@ -1,5 +1,7 @@
 # RExec
 
+**This project is stable but no longer maintained and has been superceeded by [process-graph][2].**
+
 RExec stands for Remote Execute and provides support for executing processes both locally and remotely. It provides a number of different tools to assist with running Ruby code:
 
 * A framework to send Ruby code to a remote server for execution.
@@ -12,6 +14,7 @@ RExec stands for Remote Execute and provides support for executing processes bot
 For more information please see the [project page][1].
 
 [1]: http://www.codeotaku.com/projects/rexec
+[2]: https://github.com/ioquatix/process-graph
 
 ## Installation
 
